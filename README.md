@@ -1,4 +1,3 @@
-# match-analyzer
 <!DOCTYPE html>
 <html lang="ar">
 <head>
@@ -54,6 +53,17 @@
   <div class="result" id="output"></div>
 
   <script>
+    const apiKey = 8dfb10efdaba416d9293da7581bd0a26; // استبدل بـ API Key ديالك
+    const baseUrl = "https://api.football-data.org/v2/";
+
+    async function getLiveMatches() {
+      const response = await fetch(`${baseUrl}matches`, {
+        headers: { "X-Auth-Token": apiKey },
+      });
+      const data = await response.json();
+      return data.matches;
+    }
+
     function getRandom(min, max) {
       return (Math.random() * (max - min) + min).toFixed(1);
     }
@@ -68,14 +78,22 @@
         return;
       }
 
-      const avg1 = getRandom(0.5, 3.0);
-      const avg2 = getRandom(0.5, 3.0);
-      const win1 = Math.floor(Math.random() * 51) + 25; // 25-75%
-      const win2 = 100 - win1;
+      // جلب المباريات الحية
+      getLiveMatches().then((matches) => {
+        const match = matches.find((m) =>
+          (m.homeTeam.name === team1 && m.awayTeam.name === team2) ||
+          (m.homeTeam.name === team2 && m.awayTeam.name === team1)
+        );
 
-      const btts = (avg1 > 1.2 && avg2 > 1.2) ? "✅ توقع: الفريقان سيسجلان (BTTS)" : "❌ توقع: مباراة مغلقة";
+        if (match) {
+          const avg1 = getRandom(0.5, 3.0);
+          const avg2 = getRandom(0.5, 3.0);
+          const win1 = Math.floor(Math.random() * 51) + 25;
+          const win2 = 100 - win1;
 
-      output.textContent = `📊 تحليل المباراة بين ${team1} و ${team2}:\n
+          const btts = (avg1 > 1.2 && avg2 > 1.2) ? "✅ توقع: الفريقان سيسجلان (BTTS)" : "❌ توقع: مباراة مغلقة";
+
+          output.textContent = `📊 تحليل المباراة بين ${team1} و ${team2}:\n
 ⚽️ أهداف متوقعة:
 - ${team1}: ${avg1}
 - ${team2}: ${avg2}
@@ -85,8 +103,13 @@
 - فوز ${team2}: ${win2}%
 
 ${btts}`;
+        } else {
+          output.textContent = "⚠️ المباراة غير موجودة في المباريات الحالية.";
+        }
+      });
     }
   </script>
 
 </body>
 </html>
+
